@@ -42,6 +42,51 @@ public:
         }
     }
 
+        MyGauss& operator =(const MyGauss& temp)
+    {
+        //Если присвоили самого себя
+        if (this == &temp)
+        {
+            return *this;
+        }
+
+        //освобождаем память
+        delete[] mk;
+        delete[] b;
+        delete[] x;
+
+        
+        this->n  = temp.n;
+
+        //Выделяем память под новые значения
+        this->mk = new double* [n];
+        this->b = new double[n];
+        this->x = new double[n];
+
+        //Выделяем память под каждую строку матрицы
+        for (int i = 0; i < n; i++)
+            this->mk[i] = new double[n];
+
+        //Заполняем значения коэф матрицы
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+
+                this->mk[i][j] = temp.mk[i][j];
+            }
+            for (int i = 0; i < n; i++)
+            {
+                this->b[i] = temp.b[i];
+            }
+        }
+        //Заполняем значения решений СЛАУ
+        for (int i = 0; i < n; i++)
+        {
+            this->x[i] = temp.x[i];
+        }
+    }
+
     MyGauss(const MyGauss &temp)
     {
         /*
@@ -81,7 +126,7 @@ public:
         delete[] mk;
     }
 
-    void SolveSystem();
+    bool SolveSystem();
 
     void print_result()
     {
@@ -107,11 +152,12 @@ public:
 	}
 };
 
-void MyGauss::SolveSystem()
+bool MyGauss::SolveSystem()
 {
     //Решение системы линейных уравенений из матрицы
     int i, j, k;
     double m;
+    bool hasSolved = true;
     //Проходим по каждой строке в матрице
     for (i = 0; i < n; i++)
     {
@@ -150,23 +196,54 @@ void MyGauss::SolveSystem()
             }
             b[j] -= m * b[i];
         }
+        for (int mainD = 0;  mainD < n; mainD++)
+        {
+            if (fabs(mk[mainD][mainD]) < 1e-12)
+            {
+                hasSolved = false;
+            }
+        }
     }
 
-    //Значение последнего неизвестного
-    x[n - 1] = b[n - 1] / mk[n - 1][n - 1];
-    //Идём от предпоследней строки к первой
-    for (i = n - 2; i >= 0; i--)
-    {
-        x[i] = b[i];
-        for (j = i + 1; j < n; j++)
+
+
+    if (hasSolved){
+        //Значение последнего неизвестного
+        x[n - 1] = b[n - 1] / mk[n - 1][n - 1];
+        //Идём от предпоследней строки к первой
+        for (i = n - 2; i >= 0; i--)
         {
-            x[i] -= mk[i][j] * x[j];
+            x[i] = b[i];
+            for (j = i + 1; j < n; j++)
+            {
+                x[i] -= mk[i][j] * x[j];
+            }
+            x[i] /= mk[i][i];
         }
-        x[i] /= mk[i][i];
+        return true;
+    } else {
+        std::cout << "Sorry, this matrix doesn't have solutions!" << std::endl;
+        return false;
     }
+
 }
 
 
 int main(){
+
+    MyGauss gauss;
+    MyGauss gauss1(gauss);
+    gauss << std::cout;
+    gauss1 << std::cout;   
+    if (gauss1.SolveSystem() == 1)
+    {
+        gauss << std::cout;
+        gauss1 << std::cout;
+        gauss1.print_result();
+    }
+    else
+    {
+
+    }
 
 }
